@@ -1,0 +1,16 @@
+.dub
+dub.selections.json
+docs.json
+__dummy.html
+docs/
+/bcrbtree
+*.so
+*.dylib
+*.dll
+*.a
+bcrbtree.lib
+bcrbtree-test-*
+*.exe
+*.o
+*.obj
+*.lst
