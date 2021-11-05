@@ -9,7 +9,7 @@ License: Distributed under the Boost Software License, Version 1.0.
 boost.org/LICENSE_1_0.txt)).
 Authors: Steven Schveighoffer, $(HTTP erdani.com, Andrei Alexandrescu)
 */
-module bcrbtree;
+module bcrbtree.bcrbtree;
 
 import std.functional : binaryFun;
 
@@ -582,7 +582,7 @@ struct RBNode(V)
     }
 }
 
-private struct RBRange(N)
+package struct RBRange(N)
 {
     alias Node = N;
     alias Elem = typeof(Node.value);
@@ -692,7 +692,7 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
     private Node   _begin;
     private size_t _length;
 
-    private void _setup()
+    package void _setup()
     {
         //Make sure that _setup isn't run more than once.
         //assert(!_end, "Setup must only be run once");
@@ -730,7 +730,7 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
     alias ImmutableRange = RBRange!(immutable(RBNode)*); /// Ditto
 
     // find a node based on an element value
-    private inout(RBNode)* _find(Elem e) inout
+    package inout(RBNode)* _find(Elem e) inout
     {
         static if (allowDuplicates)
         {
@@ -897,6 +897,36 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
     ImmutableRange opSlice() immutable
     {
         return ImmutableRange(_begin, _end);
+    }
+
+    // Find the range for which every element is equal.
+    private void findEnclosingRange(Elem e, inout(RBNode)** begin, inout(RBNode)** end) inout
+    {
+        *begin = _firstGreaterEqual(e);
+        *end = _firstGreater(e);
+    }
+    
+    Range range(Elem e)
+    {
+        RBNode* begin, end;
+        findEnclosingRange(e, &begin, &end);
+        return Range(begin, end);
+    }
+
+    /// Ditto
+    ConstRange range(Elem e) const
+    {
+        const(RBNode)* begin, end;
+        findEnclosingRange(e, &begin, &end);
+        return ConstRange(begin, end);
+    }
+
+    /// Ditto
+    ImmutableRange range(Elem e) immutable
+    {
+        immutable(RBNode)* begin, end;
+        findEnclosingRange(e, &begin, &end);
+        return ImmutableRange(begin, end);
     }
 
     /**
@@ -1333,8 +1363,12 @@ assert(equal(rbt[], [5]));
     
     void lazyInit()
     {
-        if(_begin is null)
+        if(isNull)
             _setup();
+    }
+
+    bool isNull() const {
+        return _begin is null;
     }
 
     private this(Node end, size_t length)
