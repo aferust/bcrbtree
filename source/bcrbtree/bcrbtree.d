@@ -696,12 +696,13 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
     {
         //Make sure that _setup isn't run more than once.
         //assert(!_end, "Setup must only be run once");
-        _begin = _end = allocate();
+        if(!_end)
+            _begin = _end = allocate();
     }
 
     static private Node allocate()
     {
-        return mallocNew!(RBNode, true)();//new RBNode;
+        return mallocNew!(RBNode)();//new RBNode;
     }
 
     static private Node allocate(Elem v)
@@ -1368,7 +1369,7 @@ assert(equal(rbt[], [5]));
     }
 
     bool isNull() const {
-        return _begin is null;
+        return _end is null;
     }
 
     private this(Node end, size_t length)
@@ -1479,20 +1480,12 @@ extern(C) int main() @nogc nothrow
 */
 import core.stdc.stdlib: malloc, realloc, free;
 
-auto mallocNew(T, alias withCtor = false, Args...)(Args args)
+auto mallocNew(T, Args...)(Args args)
 {
     immutable size_t allocSize = T.sizeof;
 
     T* obj = cast(T*)malloc(allocSize);
-
-    static if (withCtor){
-        *obj = T(args);
-    } else
-    static if (args.length > 0){ // an emplace-like thing
-        static foreach(i, arg; args){
-            obj.tupleof[i] = arg;
-        }
-    }
+    *obj = T(args);
     return obj;
 }
 
