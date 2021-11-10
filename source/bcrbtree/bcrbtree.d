@@ -696,8 +696,7 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
     {
         //Make sure that _setup isn't run more than once.
         //assert(!_end, "Setup must only be run once");
-        if(!_end)
-            _begin = _end = allocate();
+        _begin = _end = allocate();
     }
 
     static private Node allocate()
@@ -714,6 +713,8 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
     {
         while(length > 0)
             removeBack();
+        if(_end)
+            destroyFree(_end);
     }
 
     /**
@@ -781,8 +782,7 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
 
         if (!_end.left)
         {
-            result = allocate(n);
-            (() @trusted { _end.left = _begin = result; }) ();
+            _end.left = _begin = result = allocate(n);
         }
         else
         {
@@ -798,8 +798,7 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
                         //
                         // add to right of new parent
                         //
-                        result = allocate(n);
-                        (() @trusted { newParent.left = result; }) ();
+                        newParent.left = result = allocate(n);
                         break;
                     }
                 }
@@ -820,8 +819,7 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
                         //
                         // add to right of new parent
                         //
-                        result = allocate(n);
-                        (() @trusted { newParent.right = result; }) ();
+                        newParent.right = result = allocate(n);
                         break;
                     }
                 }
@@ -1001,13 +999,14 @@ struct RedBlackTree(T, alias less = "a < b", bool allowDuplicates = false)
      *
      * Complexity: $(BIGOH 1)
      */
+    /*
     void clear()
     {
         _end.left = null;
         _begin = _end;
         _length = 0;
     }
-
+    */
     /**
      * Insert a single element in the container.  Note that this does not
      * invalidate any ranges currently iterating the container.
